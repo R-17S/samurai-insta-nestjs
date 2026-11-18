@@ -1,16 +1,20 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { CommandBus } from '@nestjs/cqrs';
-
-import { LoginCommand } from '../../application/commands/login.command';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
+
 import {RegisterUserCommand} from "../../application/commands/register-user.command";
+import { LoginCommand } from '../../application/commands/login.command';
+import { LogoutCommand } from '../../application/commands/logout.command';
+import { GetMeQuery } from '../../application/queries/get-me.query';
+import { JwtTokenService } from '../../infrastructure/security/jwt-token.service';
+
 
 @Controller()
 export class AuthMessageController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(private readonly commandBus: CommandBus, private readonly queryBus: QueryBus,  private readonly jwtTokenService: JwtTokenService) {}
 
   @MessagePattern({ cmd: 'auth.ping' })
   ping() {
@@ -46,6 +50,27 @@ export class AuthMessageController {
         email: dto.email,
         password: dto.password,
       })
+    );
+  }
+
+  @MessagePattern({ cmd: 'auth.logout' })
+  logout(@Payload() data: { refreshToken: string }) {
+    return this.commandBus.execute(
+      new LogoutCommand(data.refreshToken),
+    );
+  }
+
+  @MessagePattern({ cmd: 'auth.verify-access-token' })
+  async verifyAccessToken(
+    @Payload() data: { accessToken: string },
+  ) {
+    return this.jwtTokenService.verifyAccessToken(data.accessToken);
+  }
+
+  @MessagePattern({ cmd: 'auth.me' })
+  async getMe(@Payload() data: { userId: number }) {
+    return this.queryBus.execute(
+      new GetMeQuery(data.userId),
     );
   }
 }

@@ -7,6 +7,12 @@ export interface CreateAuthUserData {
   passwordHash: string;
 }
 
+export interface CreateRefreshTokenData {
+  tokenHash: string;
+  expiresAt: Date;
+  userId: number;
+}
+
 @Injectable()
 export class PrismaAuthRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -31,6 +37,30 @@ export class PrismaAuthRepository {
         name: true,
         email: true,
         createdAt: true,
+      },
+    });
+  }
+
+  async createRefreshToken(data: CreateRefreshTokenData) {
+    return this.prisma.refreshToken.create({
+      data,
+    });
+  }
+
+  async findRefreshTokenByHash(tokenHash: string) {
+    return this.prisma.refreshToken.findUnique({
+      where: { tokenHash },
+    });
+  }
+
+  async revokeRefreshTokenByHash(tokenHash: string) {
+    return this.prisma.refreshToken.updateMany({
+      where: {
+        tokenHash,
+        revokedAt: null,
+      },
+      data: {
+        revokedAt: new Date(),
       },
     });
   }

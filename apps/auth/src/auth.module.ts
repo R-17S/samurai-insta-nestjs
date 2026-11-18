@@ -9,6 +9,9 @@ import { PrismaAuthRepository } from './infrastructure/prisma-auth.repository';
 import { JwtTokenService } from './infrastructure/security/jwt-token.service';
 import { RegisterUserHandler } from './application/commands/register-user.handler';
 import { LoginHandler } from './application/commands/login.handler';
+import { TokenHashService } from './infrastructure/security/token-hash.service';
+import { LogoutHandler } from './application/commands/logout.handler';
+import { GetMeHandler } from './application/queries/get-me.handler';
 
 @Module({
   imports: [
@@ -30,9 +33,15 @@ import { LoginHandler } from './application/commands/login.handler';
   controllers: [AuthMessageController],
   providers: [
     PrismaAuthRepository,
+
     JwtTokenService,
+    TokenHashService,
+
     RegisterUserHandler,
     LoginHandler,
+    LogoutHandler,
+
+    GetMeHandler
   ],
 })
 export class AuthModule {}
