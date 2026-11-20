@@ -12,6 +12,9 @@ import { LoginHandler } from './application/commands/login.handler';
 import { TokenHashService } from './infrastructure/security/token-hash.service';
 import { LogoutHandler } from './application/commands/logout.handler';
 import { GetMeHandler } from './application/queries/get-me.handler';
+import { EmailVerificationService } from './infrastructure/security/email-verification.service';
+import { VerifyEmailHandler } from './application/commands/verify-email.handler';
+import { NodemailerService } from './infrastructure/email/nodemailer.service';
 
 @Module({
   imports: [
@@ -36,10 +39,13 @@ import { GetMeHandler } from './application/queries/get-me.handler';
 
     JwtTokenService,
     TokenHashService,
-
+    EmailVerificationService,
+    NodemailerService,
+    
     RegisterUserHandler,
     LoginHandler,
     LogoutHandler,
+    VerifyEmailHandler,
 
     GetMeHandler
   ],

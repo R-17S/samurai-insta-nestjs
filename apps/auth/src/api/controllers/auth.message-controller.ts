@@ -10,6 +10,7 @@ import { LoginCommand } from '../../application/commands/login.command';
 import { LogoutCommand } from '../../application/commands/logout.command';
 import { GetMeQuery } from '../../application/queries/get-me.query';
 import { JwtTokenService } from '../../infrastructure/security/jwt-token.service';
+import { VerifyEmailCommand } from '../../application/commands/verify-email.command';
 
 
 @Controller()
@@ -36,9 +37,11 @@ export class AuthMessageController {
   register(@Payload() dto: RegisterDto) {
     return this.commandBus.execute(
       new RegisterUserCommand({
-        name: dto.name,
+        username: dto.username,
         email: dto.email,
         password: dto.password,
+        passwordConfirmation: dto.passwordConfirmation,
+        acceptedTerms: dto.acceptedTerms,
       }),
     );
   }
@@ -71,6 +74,13 @@ export class AuthMessageController {
   async getMe(@Payload() data: { userId: number }) {
     return this.queryBus.execute(
       new GetMeQuery(data.userId),
+    );
+  }
+
+  @MessagePattern({ cmd: 'auth.verify-email' })
+  async verifyEmail(@Payload() data: { token: string }) {
+    return this.commandBus.execute(
+      new VerifyEmailCommand(data.token),
     );
   }
 }

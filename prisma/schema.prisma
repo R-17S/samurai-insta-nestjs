@@ -8,21 +8,23 @@ datasource db {
 }
 
 model User {
-  id           Int     @id @default(autoincrement())
-  name         String
-  email        String  @unique
-  passwordHash String
-  avatarUrl    String?
-  bio          String?
+  id              Int     @id @default(autoincrement())
+  name            String
+  email           String  @unique
+  passwordHash    String
+  avatarUrl       String?
+  bio             String?
+  isEmailVerified Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  posts               Post[]
-  refreshTokens       RefreshToken[]
-  passwordResetTokens PasswordResetToken[]
-  oauthAccounts       OAuthAccount[]
-  devices             Device[]
+  posts                   Post[]
+  refreshTokens           RefreshToken[]
+  passwordResetTokens     PasswordResetToken[]
+  oauthAccounts           OAuthAccount[]
+  devices                 Device[]
+  emailVerificationTokens EmailVerificationToken[]
 
   @@map("users")
 }
@@ -73,6 +75,21 @@ model PasswordResetToken {
 
   @@index([userId])
   @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        Int       @id @default(autoincrement())
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("email_verification_tokens")
 }
 
 enum OAuthProvider {

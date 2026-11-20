@@ -1,7 +1,9 @@
 export interface RegisterUserData {
-  name: string;
+  username: string;
   email: string;
   password: string;
+  passwordConfirmation: string;
+  acceptedTerms: boolean;
 }
 
 export class RegisterUserCommand {

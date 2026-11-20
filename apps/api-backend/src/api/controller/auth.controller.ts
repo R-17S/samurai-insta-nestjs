@@ -11,7 +11,7 @@ import {
   HttpStatus,
   UnauthorizedException,
   ConflictException,
-  InternalServerErrorException,
+  InternalServerErrorException, BadRequestException, Query, ForbiddenException,
 } from '@nestjs/common';
 
 import { ClientProxy } from '@nestjs/microservices';
@@ -27,7 +27,7 @@ import {
   ApiUnauthorizedResponse,
   ApiCookieAuth,
   ApiNoContentResponse,
-  ApiBearerAuth,
+  ApiBearerAuth, ApiForbiddenResponse,
 } from '@nestjs/swagger';
 
 import {
@@ -54,42 +54,26 @@ export class AuthController {
     private readonly authClient: ClientProxy,
   ) {}
 
+
   // REGISTER
   @Post('register')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'User registration',
-    description:
-      'Creates a new user and automatically authenticates them.',
+    description: 'Creates a new user and starts email verification.',
   })
   @ApiBody({ type: RegisterDto })
   @ApiOkResponse({
-    description:
-      'User successfully registered and authenticated. Refresh token is set as an HttpOnly cookie.',
+    description: 'Registration created. Email verification is required.',
     schema: {
       example: {
-        user: {
-          id: 9,
-          name: 'Alex',
-          email: 'alex@example.com',
-          createdAt: '2026-11-18T02:10:13.220Z',
-        },
-        accessToken: 'ACCESS_TOKEN',
-      },
-    },
-    headers: {
-      'Set-Cookie': {
-        description: 'HttpOnly refresh token cookie.',
-        schema: {
-          type: 'string',
-          example:
-            'refreshToken=JWT_TOKEN; HttpOnly; SameSite=Strict; Path=/api/v1/auth; Max-Age=604800',
-        },
+        message: 'Registration created',
+        email: 'alex@example.com',
       },
     },
   })
   @ApiBadRequestResponse({
-    description: 'Invalid registration data',
+    description: 'Invalid registration data or passwords do not match',
   })
   @ApiConflictResponse({
     description: 'Email already registered',
@@ -97,10 +81,7 @@ export class AuthController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error',
   })
-  async register(
-    @Body() dto: RegisterDto,
-    @Res({ passthrough: true }) response: ExpressResponse,
-  ) {
+  async register(@Body() dto: RegisterDto) {
     const result = await firstValueFrom(
       this.authClient
         .send({ cmd: 'auth.register' }, dto)
@@ -112,6 +93,12 @@ export class AuthController {
               );
             }
 
+            if (error.statusCode === 400) {
+              return throwError(
+                () => new BadRequestException(error.message),
+              );
+            }
+
             return throwError(
               () => new InternalServerErrorException(),
             );
@@ -119,19 +106,9 @@ export class AuthController {
         ),
     );
 
-    const { user, accessToken, refreshToken } = result;
-
-    response.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/api/v1/auth',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
     return {
-      user,
-      accessToken,
+      message: 'Registration created',
+      email: result.email,
     };
   }
 
@@ -163,6 +140,9 @@ export class AuthController {
   @ApiUnauthorizedResponse({
     description: 'Invalid email or password',
   })
+  @ApiForbiddenResponse({
+    description: 'Email is not verified',
+  })
   @ApiInternalServerErrorResponse({
     description: 'Internal server error',
   })
@@ -175,6 +155,15 @@ export class AuthController {
         .send({ cmd: 'auth.login' }, dto)
         .pipe(
           catchError((error) => {
+            if (error.statusCode === 403) {
+              return throwError(
+                () =>
+                  new ForbiddenException(
+                    error.message || 'Please verify your email before logging in',
+                  ),
+              );
+            }
+
             if (error.statusCode === 401) {
               return throwError(
                 () =>
@@ -380,6 +369,61 @@ export class AuthController {
     return {
       status: 'ok',
       message: 'Auth ping route is working!',
+    };
+  }
+
+
+  // VERIFY EMAIL
+  @Get('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Verify user email',
+    description: 'Confirms user email using the verification token.',
+  })
+  @ApiOkResponse({
+    description: 'Email successfully verified.',
+    schema: {
+      example: {
+        message: 'Email successfully verified',
+        email: 'alex@example.com',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid or expired verification token',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error',
+  })
+  async verifyEmail(@Query('token') token: string) {
+    if (!token) {
+      throw new BadRequestException('Verification token is required');
+    }
+
+    const result = await firstValueFrom(
+      this.authClient
+        .send(
+          { cmd: 'auth.verify-email' },
+          { token },
+        )
+        .pipe(
+          catchError((error) => {
+            if (error.statusCode === 400) {
+              return throwError(
+                () => new BadRequestException(error.message),
+              );
+            }
+
+            return throwError(
+              () => new InternalServerErrorException(),
+            );
+          }),
+        ),
+    );
+
+    return {
+      message: 'Email successfully verified',
+      email: result.email,
     };
   }
 }

@@ -41,6 +41,13 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
       });
     }
 
+    if (!user.isEmailVerified) {
+      throw new RpcException({
+        statusCode: 403,
+        message: 'Please verify your email before logging in',
+      });
+    }
+    
     const payload = {
       sub: user.id,
       email: user.email,

@@ -13,6 +13,12 @@ export interface CreateRefreshTokenData {
   userId: number;
 }
 
+export interface CreateEmailVerificationTokenData {
+  tokenHash: string;
+  expiresAt: Date;
+  userId: number;
+}
+
 @Injectable()
 export class PrismaAuthRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -37,6 +43,7 @@ export class PrismaAuthRepository {
         name: true,
         email: true,
         createdAt: true,
+        isEmailVerified: true,
       },
     });
   }
@@ -62,6 +69,74 @@ export class PrismaAuthRepository {
       data: {
         revokedAt: new Date(),
       },
+    });
+  }
+
+  async createEmailVerificationToken(
+    data: CreateEmailVerificationTokenData,
+  ) {
+    return this.prisma.emailVerificationToken.create({
+      data,
+    });
+  }
+
+  async findEmailVerificationTokenByHash(tokenHash: string) {
+    return this.prisma.emailVerificationToken.findUnique({
+      where: { tokenHash },
+    });
+  }
+
+  async markEmailVerificationTokenAsUsed(tokenHash: string) {
+    return this.prisma.emailVerificationToken.updateMany({
+      where: {
+        tokenHash,
+        usedAt: null,
+      },
+      data: {
+        usedAt: new Date(),
+      },
+    });
+  }
+
+  async verifyUserEmail(userId: number) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        isEmailVerified: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        isEmailVerified: true,
+      },
+    });
+  }
+
+  async createUserWithEmailVerificationToken(
+    userData: CreateAuthUserData,
+    tokenData: Omit<CreateEmailVerificationTokenData, 'userId'>,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: userData,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          createdAt: true,
+          isEmailVerified: true,
+        },
+      });
+
+      await tx.emailVerificationToken.create({
+        data: {
+          ...tokenData,
+          userId: user.id,
+        },
+      });
+
+      return user;
     });
   }
 }

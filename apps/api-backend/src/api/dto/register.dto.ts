@@ -5,18 +5,23 @@ import {
   IsString,
   MaxLength,
   MinLength,
+  Matches,
+  Equals,
 } from 'class-validator';
 
 export class RegisterDto {
   @ApiProperty({
-    example: 'Alex',
-    description: 'User name',
-    maxLength: 100,
+    example: 'alex_123',
+    description: 'Username: letters, numbers, underscores and hyphens',
+    minLength: 6,
+    maxLength: 30,
   })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(100)
-  name: string;
+  @MinLength(6)
+  @MaxLength(30)
+  @Matches(/^[a-zA-Z0-9_-]+$/)
+  username: string;
 
   @ApiProperty({
     example: 'alex@example.com',
@@ -28,12 +33,28 @@ export class RegisterDto {
 
   @ApiProperty({
     example: 'StrongPassword123!',
-    description: 'User password',
-    minLength: 8,
-    maxLength: 128,
+    description: 'Password',
+    minLength: 6,
+    maxLength: 20,
   })
   @IsString()
-  @MinLength(8)
-  @MaxLength(128)
+  @MinLength(6)
+  @MaxLength(20)
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]+$/)
   password: string;
+
+  @ApiProperty({
+    example: 'StrongPassword123!',
+    description: 'Password confirmation',
+  })
+  @IsString()
+  @IsNotEmpty()
+  passwordConfirmation: string;
+
+  @ApiProperty({
+    example: true,
+    description: 'Acceptance of Terms of Service and Privacy Policy',
+  })
+  @Equals(true)
+  acceptedTerms: boolean;
 }
