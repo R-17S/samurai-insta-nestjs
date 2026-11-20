@@ -90,6 +90,11 @@ spec:
                 secretKeyRef:
                   name: api-auth-production-config-secret
                   key: API_URL
+            - name: PASSWORD_RESET_URL
+              valueFrom:
+                secretKeyRef:
+                  name: api-auth-production-config-secret
+                  key: PASSWORD_RESET_URL
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
