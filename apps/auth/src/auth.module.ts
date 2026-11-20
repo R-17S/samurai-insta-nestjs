@@ -15,6 +15,7 @@ import { GetMeHandler } from './application/queries/get-me.handler';
 import { EmailVerificationService } from './infrastructure/security/email-verification.service';
 import { VerifyEmailHandler } from './application/commands/verify-email.handler';
 import { NodemailerService } from './infrastructure/email/nodemailer.service';
+import { ResetDatabaseHandler } from './application/commands/reset-database.handler';
 
 @Module({
   imports: [
@@ -41,11 +42,13 @@ import { NodemailerService } from './infrastructure/email/nodemailer.service';
     TokenHashService,
     EmailVerificationService,
     NodemailerService,
-    
+
     RegisterUserHandler,
     LoginHandler,
     LogoutHandler,
     VerifyEmailHandler,
+
+    ResetDatabaseHandler,
 
     GetMeHandler
   ],

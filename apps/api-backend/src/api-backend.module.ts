@@ -3,6 +3,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { TestController } from './api/controller/test.controller';
+import { DatabaseController } from './api/controller/database.controller';
 
 @Module({
   imports: [
@@ -21,6 +22,9 @@ import { TestController } from './api/controller/test.controller';
       },
     ]),
   ],
-  controllers: [AuthController, TestController],
+  controllers: [
+    AuthController,
+    DatabaseController, // Удалить после тестирования auth
+    TestController],
 })
 export class ApiBackendModule {}

@@ -139,4 +139,18 @@ export class PrismaAuthRepository {
       return user;
     });
   }
+
+  async resetDatabase(): Promise<void> {
+    await this.prisma.$executeRaw`
+    TRUNCATE TABLE
+      "posts",
+      "refresh_tokens",
+      "password_reset_tokens",
+      "email_verification_tokens",
+      "oauth_accounts",
+      "devices",
+      "users"
+    RESTART IDENTITY CASCADE;
+  `;
+  }
 }

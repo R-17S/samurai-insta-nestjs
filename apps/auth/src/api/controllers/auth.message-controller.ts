@@ -11,6 +11,7 @@ import { LogoutCommand } from '../../application/commands/logout.command';
 import { GetMeQuery } from '../../application/queries/get-me.query';
 import { JwtTokenService } from '../../infrastructure/security/jwt-token.service';
 import { VerifyEmailCommand } from '../../application/commands/verify-email.command';
+import { ResetDatabaseCommand } from '../../application/commands/reset-database.command';
 
 
 @Controller()
@@ -82,5 +83,10 @@ export class AuthMessageController {
     return this.commandBus.execute(
       new VerifyEmailCommand(data.token),
     );
+  }
+
+  @MessagePattern({ cmd: 'database.reset' })
+  async resetDatabase() {
+    return this.commandBus.execute(new ResetDatabaseCommand());
   }
 }
