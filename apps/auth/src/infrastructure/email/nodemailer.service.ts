@@ -66,4 +66,23 @@ export class NodemailerService {
       return false;
     }
   }
+
+  async sendPasswordResetEmail(email: string, token: string): Promise<void> {
+    const resetUrl = `${process.env.PASSWORD_RESET_URL}?token=${encodeURIComponent(token)}`;
+
+    await this.transporter.sendMail({
+      from: process.env.SMTP_FROM,
+      to: email,
+      subject: 'Password reset',
+      html: `
+      <h2>Password reset</h2>
+      <p>We received a request to reset your password.</p>
+      <p>
+        <a href="${resetUrl}">Reset password</a>
+      </p>
+      <p>This link expires in 1 hour.</p>
+      <p>If you did not request a password reset, ignore this email.</p>
+    `,
+    });
+  }
 }

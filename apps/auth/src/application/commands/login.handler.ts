@@ -1,11 +1,11 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import * as argon2 from 'argon2';
 
 import { LoginCommand } from './login.command';
 import { PrismaAuthRepository } from '../../infrastructure/prisma-auth.repository';
 import { JwtTokenService } from '../../infrastructure/security/jwt-token.service';
 import { TokenHashService } from '../../infrastructure/security/token-hash.service';
 import { RpcException } from '@nestjs/microservices';
+import { PasswordHashService } from '../../infrastructure/security/password-hash.service';
 
 @CommandHandler(LoginCommand)
 export class LoginHandler implements ICommandHandler<LoginCommand> {
@@ -13,6 +13,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
     private readonly authRepository: PrismaAuthRepository,
     private readonly jwtTokenService: JwtTokenService,
     private readonly tokenHashService: TokenHashService,
+    private readonly passwordHashService: PasswordHashService,
   ) {}
 
   async execute(command: LoginCommand) {
@@ -29,7 +30,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
       });
     }
 
-    const isPasswordValid = await argon2.verify(
+    const isPasswordValid = await this.passwordHashService.verify(
       user.passwordHash,
       password,
     );
@@ -47,7 +48,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
         message: 'Please verify your email before logging in',
       });
     }
-    
+
     const payload = {
       sub: user.id,
       email: user.email,

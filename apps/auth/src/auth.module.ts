@@ -16,6 +16,9 @@ import { EmailVerificationService } from './infrastructure/security/email-verifi
 import { VerifyEmailHandler } from './application/commands/verify-email.handler';
 import { NodemailerService } from './infrastructure/email/nodemailer.service';
 import { ResetDatabaseHandler } from './application/commands/reset-database.handler';
+import { ForgotPasswordHandler } from './application/commands/forgot-password.handler';
+import { PasswordResetService } from './infrastructure/security/password-reset.service';
+import { PasswordHashService } from './infrastructure/security/password-hash.service';
 
 @Module({
   imports: [
@@ -42,11 +45,14 @@ import { ResetDatabaseHandler } from './application/commands/reset-database.hand
     TokenHashService,
     EmailVerificationService,
     NodemailerService,
+    PasswordResetService,
+    PasswordHashService,
 
     RegisterUserHandler,
     LoginHandler,
     LogoutHandler,
     VerifyEmailHandler,
+    ForgotPasswordHandler,
 
     ResetDatabaseHandler,
 

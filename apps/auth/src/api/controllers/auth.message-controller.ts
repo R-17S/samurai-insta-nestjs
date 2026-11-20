@@ -12,6 +12,8 @@ import { GetMeQuery } from '../../application/queries/get-me.query';
 import { JwtTokenService } from '../../infrastructure/security/jwt-token.service';
 import { VerifyEmailCommand } from '../../application/commands/verify-email.command';
 import { ResetDatabaseCommand } from '../../application/commands/reset-database.command';
+import { ForgotPasswordCommand } from '../../application/commands/forgot-password.command';
+import { ResetPasswordCommand } from '../../application/commands/reset-password.command';
 
 
 @Controller()
@@ -88,5 +90,32 @@ export class AuthMessageController {
   @MessagePattern({ cmd: 'database.reset' })
   async resetDatabase() {
     return this.commandBus.execute(new ResetDatabaseCommand());
+  }
+
+  @MessagePattern({ cmd: 'auth.forgot-password' })
+  async forgotPassword(@Payload() data: { email: string }) {
+    await this.commandBus.execute(
+      new ForgotPasswordCommand(data.email),
+    );
+
+    return {
+      message: 'If an account with this email exists, a password reset link has been sent.',
+    };
+  }
+
+  @MessagePattern({ cmd: 'auth.reset-password' })
+  async resetPassword(
+    @Payload() data: {
+      token: string;
+      newPassword: string;
+    },
+  ) {
+    await this.commandBus.execute(
+      new ResetPasswordCommand(data.token, data.newPassword),
+    );
+
+    return {
+      message: 'Password has been reset successfully',
+    };
   }
 }

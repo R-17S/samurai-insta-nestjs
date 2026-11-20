@@ -19,6 +19,12 @@ export interface CreateEmailVerificationTokenData {
   userId: number;
 }
 
+export interface CreatePasswordResetTokenData {
+  tokenHash: string;
+  expiresAt: Date;
+  userId: number;
+}
+
 @Injectable()
 export class PrismaAuthRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -152,5 +158,77 @@ export class PrismaAuthRepository {
       "users"
     RESTART IDENTITY CASCADE;
   `;
+  }
+
+
+  async createPasswordResetToken(data: CreatePasswordResetTokenData) {
+    return this.prisma.passwordResetToken.create({
+      data,
+    });
+  }
+
+  async resetPasswordWithToken(
+    tokenHash: string,
+    newPasswordHash: string,
+  ): Promise<boolean> {
+    return this.prisma.$transaction(async (tx) => {
+      const token = await tx.passwordResetToken.findUnique({
+        where: { tokenHash },
+      });
+
+      if (
+        !token ||
+        token.usedAt ||
+        token.expiresAt <= new Date()
+      ) {
+        return false;
+      }
+
+      // Помечаем токен использованным. updateMany защищает
+      // от повторного использования при параллельных запросах.
+      const consumed = await tx.passwordResetToken.updateMany({
+        where: {
+          id: token.id,
+          usedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+        data: {
+          usedAt: new Date(),
+        },
+      });
+
+      if (consumed.count === 0) {
+        return false;
+      }
+
+      await tx.user.update({
+        where: { id: token.userId },
+        data: { passwordHash: newPasswordHash },
+      });
+
+      // Отзываем все активные refresh-токены пользователя.
+      await tx.refreshToken.updateMany({
+        where: {
+          userId: token.userId,
+          revokedAt: null,
+        },
+        data: {
+          revokedAt: new Date(),
+        },
+      });
+
+      // Остальные неиспользованные ссылки тоже становятся недействительными.
+      await tx.passwordResetToken.updateMany({
+        where: {
+          userId: token.userId,
+          usedAt: null,
+        },
+        data: {
+          usedAt: new Date(),
+        },
+      });
+
+      return true;
+    });
   }
 }

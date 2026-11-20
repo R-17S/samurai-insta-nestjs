@@ -45,6 +45,8 @@ import { RegisterDto } from '../dto/register.dto';
 import { RegisterResponseDto } from '../dto/register-response.dto';
 import { LoginResponseDto } from '../dto/login-response.dto';
 import { LoginDto } from '../dto/login.dto';
+import { ForgotPasswordDto } from '../dto/forgot-password.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -425,5 +427,48 @@ export class AuthController {
       message: 'Email successfully verified',
       email: result.email,
     };
+  }
+
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Request password reset' })
+  @ApiBody({ type: ForgotPasswordDto })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return firstValueFrom(
+      this.authClient
+        .send(
+          { cmd: 'auth.forgot-password' },
+          { email: dto.email },
+        )
+        .pipe(
+          catchError((error) => {
+            throw error;
+          }),
+        ),
+    );
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    if (dto.newPassword !== dto.confirmPassword) {
+      throw new BadRequestException('Passwords do not match');
+    }
+
+    return firstValueFrom(
+      this.authClient
+        .send(
+          { cmd: 'auth.reset-password' },
+          {
+            token: dto.token,
+            newPassword: dto.newPassword,
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            throw new BadRequestException(
+              error.message || 'Password reset failed',
+            );
+          }),
+        ),
+    );
   }
 }

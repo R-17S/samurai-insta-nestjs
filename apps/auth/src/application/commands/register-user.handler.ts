@@ -1,12 +1,12 @@
 
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import * as argon2 from 'argon2';
 import { RpcException } from '@nestjs/microservices';
 
 import { PrismaAuthRepository } from '../../infrastructure/prisma-auth.repository';
 import { RegisterUserCommand } from './register-user.command';
 import { EmailVerificationService } from '../../infrastructure/security/email-verification.service';
 import { NodemailerService } from '../../infrastructure/email/nodemailer.service';
+import { PasswordHashService } from '../../infrastructure/security/password-hash.service';
 
 @CommandHandler(RegisterUserCommand)
 export class RegisterUserHandler
@@ -16,6 +16,7 @@ export class RegisterUserHandler
     private readonly authRepository: PrismaAuthRepository,
     private readonly emailVerificationService: EmailVerificationService,
     private readonly nodemailerService: NodemailerService,
+    private readonly passwordHashService: PasswordHashService,
   ) {}
 
   async execute(command: RegisterUserCommand) {
@@ -53,7 +54,7 @@ export class RegisterUserHandler
       });
     }
 
-    const passwordHash = await argon2.hash(password);
+    const passwordHash = await this.passwordHashService.hash(password);
 
     const { token, tokenData } =
       this.emailVerificationService.createTokenData();

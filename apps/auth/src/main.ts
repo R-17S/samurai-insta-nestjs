@@ -55,6 +55,7 @@ async function bootstrap() {
 
   // API
   console.log(`API_URL: ${process.env.API_URL}`);
+  console.log(`PASSWORD_RESET_URL: ${process.env.PASSWORD_RESET_URL}`);
 
   // NEON
   const maskDatabaseUrl = (value?: string): string => {
