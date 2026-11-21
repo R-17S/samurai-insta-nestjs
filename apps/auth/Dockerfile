@@ -2,7 +2,6 @@ FROM node:24-alpine
 
 ARG port
 ARG service
-
 ENV SERVICE=${service}
 ENV PORT=${port}
 
