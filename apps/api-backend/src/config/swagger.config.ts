@@ -27,5 +27,7 @@ export function setupSwagger(app: INestApplication): void {
 
   const document = SwaggerModule.createDocument(app, config);
 
-  SwaggerModule.setup('api/v1/docs', app, document);
+  SwaggerModule.setup('docs', app, document, {
+    useGlobalPrefix: true,
+  });
 }
