@@ -4,7 +4,7 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
 
-  const port = Number(process.env.PORT) || 4468;
+  const port = Number(process.env.PORT) || 4486;
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     FilesModule,
@@ -20,7 +20,7 @@ async function bootstrap() {
   await app.listen();
 
   console.log(
-    `Files microservice is running on port ${process.env.PORT || 4468}`,
+    `Files microservice is running on port ${process.env.PORT || 4486}`,
   );
   console.log(`SERVICE: ${process.env.SERVICE}`);
 }

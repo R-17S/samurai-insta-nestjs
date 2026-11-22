@@ -27,7 +27,7 @@ import { FilesController } from './api/controller/files.controller';
         transport: Transport.TCP,
         options: {
           host: (process.env.FILE_SERVICE_HOST || '127.0.0.1').trim(),
-          port: Number(process.env.FILE_SERVICE_PORT || '4468'),
+          port: Number(process.env.FILE_SERVICE_PORT || '4486'),
         },
       },
     ]),

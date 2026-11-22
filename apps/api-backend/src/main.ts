@@ -27,6 +27,8 @@
     console.log(`TEST_ENV: ${process.env.TEST_ENV}`);
     console.log(`AUTH_SERVICE_HOST: ${process.env.AUTH_SERVICE_HOST}`);
     console.log(`AUTH_SERVICE_PORT: ${process.env.AUTH_SERVICE_PORT}`);
+    console.log(`AUTH_SERVICE_HOST: ${process.env.FILE_SERVICE_HOST}`);
+    console.log(`AUTH_SERVICE_PORT: ${process.env.FILE_SERVICE_PORT}`);
   }
 
   void bootstrap();
