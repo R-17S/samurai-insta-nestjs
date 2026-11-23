@@ -70,7 +70,7 @@ export class AuthController {
     schema: {
       example: {
         message: 'Registration created',
-        email: 'alex@example.com',
+        email: 'igor777samurai@gmail.com',
       },
     },
   })
@@ -273,7 +273,7 @@ export class AuthController {
       example: {
         id: 9,
         name: 'Alex',
-        email: 'alex@example.com',
+        email: 'igor777samurai@gmail.com',
         createdAt: '2026-11-18T02:10:13.220Z',
       },
     },
@@ -387,7 +387,7 @@ export class AuthController {
     schema: {
       example: {
         message: 'Email successfully verified',
-        email: 'alex@example.com',
+        email: 'igor777samurai@gmail.com',
       },
     },
   })
