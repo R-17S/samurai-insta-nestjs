@@ -50,6 +50,8 @@ export class RecaptchaService {
         'auralis.online',
         'www.auralis.online',
         'localhost',
+        'auralis-online.ru',
+        'www.auralis-online.ru',
       ];
 
       return (
