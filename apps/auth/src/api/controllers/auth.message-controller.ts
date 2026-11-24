@@ -1,5 +1,5 @@
 import { Controller } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
 import { RegisterDto } from '../dto/register.dto';
@@ -14,6 +14,10 @@ import { VerifyEmailCommand } from '../../application/commands/verify-email.comm
 import { ResetDatabaseCommand } from '../../application/commands/reset-database.command';
 import { ForgotPasswordCommand } from '../../application/commands/forgot-password.command';
 import { ResetPasswordCommand } from '../../application/commands/reset-password.command';
+import { VerifyActiveSessionQuery } from '../../application/queries/verify-active-session.query';
+import { GetUserDevicesQuery } from '../../application/queries/get-user-devices.query';
+import { RevokeDeviceSessionCommand } from '../../application/commands/revoke-device-session.command';
+import { RevokeOtherDeviceSessionsCommand } from '../../application/commands/revoke-other-device-sessions.command';
 
 
 @Controller()
@@ -45,6 +49,7 @@ export class AuthMessageController {
         password: dto.password,
         passwordConfirmation: dto.passwordConfirmation,
         acceptedTerms: dto.acceptedTerms,
+        recaptchaToken: dto.recaptchaToken,
       }),
     );
   }
@@ -55,7 +60,9 @@ export class AuthMessageController {
       new LoginCommand({
         email: dto.email,
         password: dto.password,
-      })
+        userAgent: dto.userAgent ?? 'Unknown',
+        ipAddress: dto.ipAddress ?? 'Unknown',
+      }),
     );
   }
 
@@ -70,13 +77,59 @@ export class AuthMessageController {
   async verifyAccessToken(
     @Payload() data: { accessToken: string },
   ) {
-    return this.jwtTokenService.verifyAccessToken(data.accessToken);
+    const payload = await this.jwtTokenService.verifyAccessToken(
+      data.accessToken,
+    );
+
+    const isSessionActive = await this.queryBus.execute(
+      new VerifyActiveSessionQuery(payload.sub, payload.sessionId),
+    );
+
+    if (!isSessionActive) {
+      throw new RpcException({
+        statusCode: 401,
+        message: 'Session has been revoked',
+      });
+    }
+
+    return payload;
   }
 
   @MessagePattern({ cmd: 'auth.me' })
   async getMe(@Payload() data: { userId: number }) {
     return this.queryBus.execute(
       new GetMeQuery(data.userId),
+    );
+  }
+
+  @MessagePattern({ cmd: 'auth.get-devices' })
+  async getDevices(@Payload() data: { userId: number }) {
+    return this.queryBus.execute(
+      new GetUserDevicesQuery(data.userId),
+    );
+  }
+
+  @MessagePattern({ cmd: 'auth.revoke-device-session' })
+  async revokeDeviceSession(
+    @Payload() data: { deviceId: number; userId: number },
+  ) {
+    return this.commandBus.execute(
+      new RevokeDeviceSessionCommand(data.deviceId, data.userId),
+    );
+  }
+
+  @MessagePattern({ cmd: 'auth.revoke-other-device-sessions' })
+  async revokeOtherDeviceSessions(
+    @Payload() data: {
+      userId: number;
+      currentDeviceId: number;
+    },
+  ) {
+    return this.commandBus.execute(
+      new RevokeOtherDeviceSessionsCommand(
+        data.userId,
+        data.currentDeviceId,
+      ),
     );
   }
 
@@ -118,4 +171,6 @@ export class AuthMessageController {
       message: 'Password has been reset successfully',
     };
   }
+
+
 }

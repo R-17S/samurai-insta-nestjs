@@ -1,6 +1,6 @@
 import {
   IsEmail,
-  IsNotEmpty,
+  IsNotEmpty, IsOptional,
   IsString,
   MaxLength,
   MinLength,
@@ -17,4 +17,12 @@ export class LoginDto {
   @MinLength(8)
   @MaxLength(128)
   password: string;
+
+  @IsString()
+  @IsOptional()
+  userAgent?: string;
+
+  @IsString()
+  @IsOptional()
+  ipAddress?: string;
 }

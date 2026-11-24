@@ -73,6 +73,13 @@ async function bootstrap() {
   console.log(`DATABASE_URL: ${maskDatabaseUrl(process.env.DATABASE_URL)}`);
   console.log(`DIRECT_URL: ${maskDatabaseUrl(process.env.DIRECT_URL)}`);
 
+  // RECAPTCHA
+  console.log(
+    `RECAPTCHA_SITE_KEY: ${maskSecret(process.env.RECAPTCHA_SITE_KEY)}`,
+  );
+  console.log(
+    `RECAPTCHA_SECRET_KEY: ${maskSecret(process.env.RECAPTCHA_SECRET_KEY)}`,
+  );
 }
 
 void bootstrap();

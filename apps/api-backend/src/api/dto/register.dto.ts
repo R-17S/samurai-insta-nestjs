@@ -57,4 +57,12 @@ export class RegisterDto {
   })
   @Equals(true)
   acceptedTerms: boolean;
+
+  @ApiProperty({
+    example: 'recaptcha-token',
+    description: 'Google reCAPTCHA v3 verification token',
+  })
+  @IsString()
+  @IsNotEmpty()
+  recaptchaToken: string;
 }

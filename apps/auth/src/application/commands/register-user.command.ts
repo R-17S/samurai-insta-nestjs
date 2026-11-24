@@ -4,6 +4,7 @@ export interface RegisterUserData {
   password: string;
   passwordConfirmation: string;
   acceptedTerms: boolean;
+  recaptchaToken: string;
 }
 
 export class RegisterUserCommand {

@@ -7,6 +7,7 @@ import { RegisterUserCommand } from './register-user.command';
 import { EmailVerificationService } from '../../infrastructure/security/email-verification.service';
 import { NodemailerService } from '../../infrastructure/email/nodemailer.service';
 import { PasswordHashService } from '../../infrastructure/security/password-hash.service';
+import { RecaptchaService } from '../../infrastructure/security/recaptcha.service';
 
 @CommandHandler(RegisterUserCommand)
 export class RegisterUserHandler
@@ -17,6 +18,7 @@ export class RegisterUserHandler
     private readonly emailVerificationService: EmailVerificationService,
     private readonly nodemailerService: NodemailerService,
     private readonly passwordHashService: PasswordHashService,
+    private readonly recaptchaService: RecaptchaService,
   ) {}
 
   async execute(command: RegisterUserCommand) {
@@ -27,6 +29,17 @@ export class RegisterUserHandler
       passwordConfirmation,
       acceptedTerms,
     } = command.data;
+
+    const isRecaptchaValid = await this.recaptchaService.verify(
+      command.data.recaptchaToken,
+    );
+
+    if (!isRecaptchaValid) {
+      throw new RpcException({
+        statusCode: 400,
+        message: 'reCAPTCHA verification failed',
+      });
+    }
 
     if (password !== passwordConfirmation) {
       throw new RpcException({

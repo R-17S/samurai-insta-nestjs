@@ -17,7 +17,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
   ) {}
 
   async execute(command: LoginCommand) {
-    const { email, password } = command.data;
+    const { email, password, userAgent, ipAddress } = command.data;
 
     const user = await this.authRepository.findByEmail(
       email.trim().toLowerCase(),
@@ -49,9 +49,17 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
       });
     }
 
+    const device = await this.authRepository.createDevice({
+      userId: user.id,
+      name: userAgent || 'Unknown device',
+      userAgent: userAgent || 'Unknown',
+      ipAddress: ipAddress || 'Unknown',
+    });
+
     const payload = {
       sub: user.id,
       email: user.email,
+      sessionId: device.id,
     };
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -65,6 +73,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
       tokenHash,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       userId: user.id,
+      deviceId: device.id,
     });
 
     return {

@@ -39,4 +39,8 @@ export class RegisterDto {
     message: 'You must accept the Terms of Service and Privacy Policy',
   })
   acceptedTerms: boolean;
+
+  @IsString()
+  @IsNotEmpty()
+  recaptchaToken: string;
 }

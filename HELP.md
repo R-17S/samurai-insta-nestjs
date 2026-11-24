@@ -14,3 +14,5 @@
   @@map("email_verification_tokens")
   }
 - npx prisma migrate dev --name add_email_verification
+
+npx http-server . -p 5500

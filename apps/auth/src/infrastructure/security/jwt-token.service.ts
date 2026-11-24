@@ -6,6 +6,7 @@ import type { StringValue } from 'ms';
 export interface TokenPayload {
   sub: number;
   email: string;
+  sessionId: number;
 }
 
 @Injectable()

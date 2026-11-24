@@ -11,6 +11,7 @@ export interface CreateRefreshTokenData {
   tokenHash: string;
   expiresAt: Date;
   userId: number;
+  deviceId: number;
 }
 
 export interface CreateEmailVerificationTokenData {
@@ -229,6 +230,91 @@ export class PrismaAuthRepository {
       });
 
       return true;
+    });
+  }
+
+  async createDevice(data: {
+    userId: number;
+    name: string;
+    userAgent: string;
+    ipAddress: string;
+  }) {
+    return this.prisma.device.create({
+      data,
+    });
+  }
+
+  async findActiveDeviceSession(deviceId: number, userId: number) {
+    return this.prisma.device.findFirst({
+      where: {
+        id: deviceId,
+        userId,
+        refreshTokens: {
+          some: {
+            revokedAt: null,
+            expiresAt: {
+              gt: new Date(),
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async findDevicesByUserId(userId: number) {
+    return this.prisma.device.findMany({
+      where: {
+        userId,
+        refreshTokens: {
+          some: {
+            revokedAt: null,
+            expiresAt: {
+              gt: new Date(),
+            },
+          },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        ipAddress: true,
+        lastActiveAt: true,
+        createdAt: true,
+      },
+      orderBy: {
+        lastActiveAt: 'desc',
+      },
+    });
+  }
+
+  async revokeDeviceSession(deviceId: number, userId: number) {
+    return this.prisma.refreshToken.updateMany({
+      where: {
+        deviceId,
+        userId,
+        revokedAt: null,
+      },
+      data: {
+        revokedAt: new Date(),
+      },
+    });
+  }
+
+  async revokeOtherDeviceSessions(
+    userId: number,
+    currentDeviceId: number,
+  ) {
+    return this.prisma.refreshToken.updateMany({
+      where: {
+        userId,
+        deviceId: {
+          not: currentDeviceId,
+        },
+        revokedAt: null,
+      },
+      data: {
+        revokedAt: new Date(),
+      },
     });
   }
 }

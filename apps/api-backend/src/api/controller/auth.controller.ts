@@ -11,7 +11,7 @@ import {
   HttpStatus,
   UnauthorizedException,
   ConflictException,
-  InternalServerErrorException, BadRequestException, Query, ForbiddenException,
+  InternalServerErrorException, BadRequestException, Query, ForbiddenException, Param, ParseIntPipe, Delete,
 } from '@nestjs/common';
 
 import { ClientProxy } from '@nestjs/microservices';
@@ -150,11 +150,19 @@ export class AuthController {
   })
   async login(
     @Body() dto: LoginDto,
+    @Req() request: Request,
     @Res({ passthrough: true }) response: ExpressResponse,
   ) {
     const result = await firstValueFrom(
       this.authClient
-        .send({ cmd: 'auth.login' }, dto)
+        .send(
+          { cmd: 'auth.login' },
+          {
+            ...dto,
+            userAgent: request.headers['user-agent'] ?? 'Unknown',
+            ipAddress: request.ip ?? 'Unknown',
+          },
+        )
         .pipe(
           catchError((error) => {
             if (error.statusCode === 403) {
@@ -336,6 +344,141 @@ export class AuthController {
               () => new InternalServerErrorException(),
             );
           }),
+        ),
+    );
+  }
+
+  // GET ACTIVE DEVICES
+  @Get('devices')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get active devices',
+    description: 'Returns active devices for the current authenticated user.',
+  })
+  async getDevices(@Req() request: Request) {
+    const authHeader = request.headers.authorization;
+
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Access token is missing');
+    }
+
+    const accessToken = authHeader.slice(7);
+
+    const payload = await firstValueFrom(
+      this.authClient
+        .send(
+          { cmd: 'auth.verify-access-token' },
+          { accessToken },
+        )
+        .pipe(
+          catchError(() =>
+            throwError(
+              () => new UnauthorizedException('Invalid or expired access token'),
+            ),
+          ),
+        ),
+    );
+
+    return firstValueFrom(
+      this.authClient
+        .send(
+          { cmd: 'auth.get-devices' },
+          { userId: payload.sub },
+        )
+        .pipe(
+          catchError(() =>
+            throwError(
+              () => new InternalServerErrorException(),
+            ),
+          ),
+        ),
+    );
+  }
+
+  @Delete('devices/:deviceId')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Revoke device session',
+    description: 'Terminates the selected device session.',
+  })
+  async revokeDeviceSession(
+    @Param('deviceId', ParseIntPipe) deviceId: number,
+    @Req() request: Request,
+  ) {
+    const authHeader = request.headers.authorization;
+
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Access token is missing');
+    }
+
+    const accessToken = authHeader.slice(7);
+
+    const payload = await firstValueFrom(
+      this.authClient
+        .send({ cmd: 'auth.verify-access-token' }, { accessToken })
+        .pipe(
+          catchError(() =>
+            throwError(
+              () => new UnauthorizedException('Invalid or expired access token'),
+            ),
+          ),
+        ),
+    );
+
+    return firstValueFrom(
+      this.authClient
+        .send(
+          { cmd: 'auth.revoke-device-session' },
+          { deviceId, userId: payload.sub },
+        )
+        .pipe(
+          catchError(() =>
+            throwError(() => new InternalServerErrorException()),
+          ),
+        ),
+    );
+  }
+
+  @Delete('devices')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Revoke all other device sessions',
+    description: 'Terminates all sessions except the current one.',
+  })
+  async revokeOtherDeviceSessions(@Req() request: Request) {
+    const authHeader = request.headers.authorization;
+
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Access token is missing');
+    }
+
+    const accessToken = authHeader.slice(7);
+
+    const payload = await firstValueFrom(
+      this.authClient
+        .send({ cmd: 'auth.verify-access-token' }, { accessToken })
+        .pipe(
+          catchError(() =>
+            throwError(
+              () => new UnauthorizedException('Invalid or expired access token'),
+            ),
+          ),
+        ),
+    );
+
+    return firstValueFrom(
+      this.authClient
+        .send(
+          { cmd: 'auth.revoke-other-device-sessions' },
+          {
+            userId: payload.sub,
+            currentDeviceId: payload.sessionId,
+          },
+        )
+        .pipe(
+          catchError(() =>
+            throwError(() => new InternalServerErrorException()),
+          ),
         ),
     );
   }

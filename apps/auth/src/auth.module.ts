@@ -19,6 +19,11 @@ import { ResetDatabaseHandler } from './application/commands/reset-database.hand
 import { ForgotPasswordHandler } from './application/commands/forgot-password.handler';
 import { PasswordResetService } from './infrastructure/security/password-reset.service';
 import { PasswordHashService } from './infrastructure/security/password-hash.service';
+import { RecaptchaService } from './infrastructure/security/recaptcha.service';
+import { VerifyActiveSessionHandler } from './application/queries/verify-active-session.handler';
+import { GetUserDevicesHandler } from './application/queries/get-user-devices.handler';
+import { RevokeDeviceSessionHandler } from './application/commands/revoke-device-session.handler';
+import { RevokeOtherDeviceSessionsHandler } from './application/commands/revoke-other-device-sessions.handler';
 
 @Module({
   imports: [
@@ -47,16 +52,22 @@ import { PasswordHashService } from './infrastructure/security/password-hash.ser
     NodemailerService,
     PasswordResetService,
     PasswordHashService,
+    RecaptchaService,
 
     RegisterUserHandler,
     LoginHandler,
     LogoutHandler,
     VerifyEmailHandler,
     ForgotPasswordHandler,
-
+    VerifyActiveSessionHandler,
+    GetUserDevicesHandler,
+    RevokeDeviceSessionHandler,
+    RevokeOtherDeviceSessionsHandler,
+    
     ResetDatabaseHandler,
 
-    GetMeHandler
+    GetMeHandler,
+
   ],
 })
 export class AuthModule {}
