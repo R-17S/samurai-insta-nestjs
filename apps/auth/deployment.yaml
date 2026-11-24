@@ -95,6 +95,16 @@ spec:
                 secretKeyRef:
                   name: api-auth-production-config-secret
                   key: PASSWORD_RESET_URL
+            - name: RECAPTCHA_SITE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: api-auth-production-config-secret
+                  key: RECAPTCHA_SITE_KEY
+            - name: RECAPTCHA_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: api-auth-production-config-secret
+                  key: RECAPTCHA_SECRET_KEY
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
