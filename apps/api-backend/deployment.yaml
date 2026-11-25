@@ -50,6 +50,11 @@ spec:
                 secretKeyRef:
                   name: api-backend-production-config-secret
                   key: CORS_ORIGINS
+            - name: RECAPTCHA_SITE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: api-backend-production-config-secret
+                  key: RECAPTCHA_SITE_KEY
             - name: TEST_ENV
               valueFrom:
                 secretKeyRef:
