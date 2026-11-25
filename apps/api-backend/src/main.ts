@@ -45,6 +45,7 @@
     console.log(`AUTH_SERVICE_PORT: ${process.env.FILE_SERVICE_PORT}`);
     console.log(`FILE_SERVICE_PORT: ${process.env.CORS_ORIGINS}`);
     console.log(`FILE_SERVICE_PORT: ${process.env.RECAPTCHA_SITE_KEY}`);
+    console.log('Hello Vlad');
   }
 
   void bootstrap();
