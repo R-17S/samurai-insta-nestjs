@@ -45,6 +45,11 @@ spec:
                 secretKeyRef:
                   name: api-backend-production-config-secret
                   key: FILE_SERVICE_PORT
+            - name: CORS_ORIGINS
+              valueFrom:
+                secretKeyRef:
+                  name: api-backend-production-config-secret
+                  key: CORS_ORIGINS
             - name: TEST_ENV
               valueFrom:
                 secretKeyRef:

@@ -7,6 +7,18 @@
   async function bootstrap() {
     const app = await NestFactory.create(ApiBackendModule);
 
+    const allowedOrigins = (process.env.CORS_ORIGINS || '')
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean);
+
+    app.enableCors({
+      origin: allowedOrigins,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    });
+
     app.getHttpAdapter().getInstance().set('trust proxy', 1);
 
     app.use(cookieParser());
@@ -31,6 +43,7 @@
     console.log(`AUTH_SERVICE_PORT: ${process.env.AUTH_SERVICE_PORT}`);
     console.log(`AUTH_SERVICE_HOST: ${process.env.FILE_SERVICE_HOST}`);
     console.log(`AUTH_SERVICE_PORT: ${process.env.FILE_SERVICE_PORT}`);
+    console.log(`FILE_SERVICE_PORT: ${process.env.CORS_ORIGINS}`);
   }
 
   void bootstrap();
